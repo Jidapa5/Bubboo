@@ -1,0 +1,86 @@
+from pyglet.window import Window
+from pyglet.app import run
+from pyglet.shapes import Rectangle
+from pyglet.graphics import Batch
+from pyglet import clock
+import random
+
+window_width = 800
+window_height = 600
+data_size = 30
+bar_width = window_width // data_size
+
+pastel_palette = [
+    (255, 179, 179, 255),  # Light Red
+    (255, 204, 153, 255),  # Light Orange
+    (255, 255, 153, 255),  # Light Yellow
+    (204, 255, 153, 255),  # Light Green
+    (179, 230, 255, 255),  # Light Blue
+    (204, 204, 255, 255),  # Light Purple
+]
+
+class Renderer(Window):
+    def __init__(self):
+        super().__init__(window_width, window_height, "Merge Sort")  # Adjust window width and height
+        self.batch = Batch()
+        self.bar_heights = [random.randint(50, 400) for _ in range(data_size)]  # Generate random bar heights
+        self.bars = [Rectangle(e * bar_width, 0, bar_width, height, batch=self.batch, color=random.choice(pastel_palette)) for e, height in enumerate(self.bar_heights)]  # Create bars with adjusted width and height and random color from the pastel palette
+        self.animation_generator = self.merge_sort_animation(0, len(self.bar_heights) - 1)
+
+    def merge_sort_animation(self, l, r):
+        if l < r:
+            mid = (l + r) // 2
+            yield from self.merge_sort_animation(l, mid)
+            yield from self.merge_sort_animation(mid + 1, r)
+            yield from self.merge(l, mid, r)
+
+    def merge(self, l, mid, r):
+        left, right = self.bar_heights[l:mid + 1], self.bar_heights[mid + 1:r + 1]
+        i, j, k = 0, 0, l
+        while i < len(left) and j < len(right):
+            blend_factor = (left[i] - right[j]) / 400  # Adjust for the range of random bar heights
+            color_index = min(int(blend_factor * len(pastel_palette)), len(pastel_palette) - 1)
+            color = pastel_palette[color_index]
+
+            self.bars[l + i].color = color
+            self.bars[mid + 1 + j].color = color
+            yield
+
+            if left[i] <= right[j]:
+                self.bar_heights[k] = left[i]
+                i += 1
+            else:
+                self.bar_heights[k] = right[j]
+                j += 1
+
+            k += 1
+            self.update_bars()
+
+        while i < len(left):
+            self.bar_heights[k] = left[i]
+            i += 1
+            k += 1
+            self.update_bars()
+
+        while j < len(right):
+            self.bar_heights[k] = right[j]
+            j += 1
+            k += 1
+            self.update_bars()
+
+    def update_bars(self):
+        self.bars = [Rectangle(e * bar_width, 0, bar_width, height, batch=self.batch, color=color) for e, (height, color) in enumerate(zip(self.bar_heights, [bar.color for bar in self.bars]))]
+
+    def on_update(self, dt):
+        try:
+            next(self.animation_generator)
+        except StopIteration:
+            pass
+
+    def on_draw(self):
+        self.clear()
+        self.batch.draw()
+
+renderer = Renderer()
+clock.schedule_interval(renderer.on_update, 0.3)
+run()
