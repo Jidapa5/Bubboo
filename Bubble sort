@@ -1,0 +1,57 @@
+import pyglet
+from pyglet import shapes
+import random
+import time
+
+window = pyglet.window.Window(800, 600)
+
+data_size = 30
+bar_width = window.width // data_size
+bar_heights = [random.randint(50, 400) for _ in range(data_size)]
+
+rainbow_palette = [
+
+    (255, 204, 204, 255),  # Light Red
+    (255, 229, 204, 255),  # Light Orange
+    (255, 255, 204, 255),  # Light Yellow
+    (204, 255, 204, 255),  # Light Green
+    (204, 229, 255, 255),  # Light Blue
+    (229, 204, 255, 255),  # Light Purple
+]
+
+current_index = 0
+sorted_index = data_size
+
+def bubble_sort_step():
+    global current_index, sorted_index
+    if current_index < sorted_index - 1:
+        if bar_heights[current_index] > bar_heights[current_index + 1]:
+            # สลับค่า
+            bar_heights[current_index], bar_heights[current_index + 1] = (
+                bar_heights[current_index + 1],
+                bar_heights[current_index],
+            )
+        current_index += 1
+    else:
+        current_index = 0
+        sorted_index -= 1
+
+def update(dt):
+    bubble_sort_step()
+
+@window.event
+def on_draw():
+    window.clear()
+
+    for i, height in enumerate(bar_heights):
+        color_index = i % len(rainbow_palette)  
+        shapes.Rectangle(
+            i * bar_width,
+            0,
+            bar_width,
+            height,
+            color=rainbow_palette[color_index],
+        ).draw()
+
+pyglet.clock.schedule_interval(update, 1 / 20.0)
+pyglet.app.run()
