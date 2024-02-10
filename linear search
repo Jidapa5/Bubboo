@@ -24,8 +24,8 @@ def linear_search():
     else:
         search_complete = True
 
-# Schedule the linear search to run every 0.5 seconds
-pyglet.clock.schedule_interval(lambda dt: linear_search(), 0.5)
+# Schedule the linear search to run every 1 seconds
+pyglet.clock.schedule_interval(lambda dt: linear_search(), 1)
 
 @window.event
 def on_draw():
